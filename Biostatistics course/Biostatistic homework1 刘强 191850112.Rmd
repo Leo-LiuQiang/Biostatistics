@@ -1,0 +1,70 @@
+---
+title: "Biostatistic homework 1"
+author: "Qiang Liu"
+date: '2022-10-6'
+output:
+  pdf_document: 
+    latex_engine: xelatex
+    extra_dependencies:
+      ctex:
+         fontset=fandol
+      amsfonts: null
+      mathrsfs: null
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+******
+
+# First include packages and read the data in the .txt file
+```{r,echo=TRUE,prompt=TRUE}
+library(moments)
+exercise_data <- scan('homework_exercise1_data.txt')
+```
+
+******
+
+# Plot of different sample size (n = 4,8,16,32,64,128)
+```{r,echo=TRUE,prompt=TRUE}
+exercise_mean <- mean(exercise_data)
+N <- 1000
+# 修改图参数，一排三个图，放两排
+opar <- par(no.readonly = TRUE)
+par(mfrow = c(2,3))
+par(pin = c(1.6,1))
+# 选取n个样本，计算对应的参数并放置于右上，将样本数据按density分布作图，并以均值作为abline
+exercise_function <- function(n){
+  x <- unlist(lapply(1:N,function(i){
+    mean(sample(exercise_data,size = n,replace = FALSE))
+  }))
+  out <- c(mu=mean(x),s2 = var(x),g1 = skewness(x),g2 = kurtosis(x)-3)
+  plot(density(x),bty = 'n',xlim = c(100,300),ylim = c(0,0.025),
+       main=sprintf("n = %s",n))
+  abline(v = mean(x))
+  lgd <- sprintf("%s:%s",names(out),round(out,5))
+  legend('topright',legend = lgd,ncol = 1,box.lwd = NA,cex = 0.5,title = "Parameters")
+  out
+}
+# 选取n为4，8，16，32，64，128的每种情况画图
+for (i in c(4,8,16,32,64,128)){
+  exercise_function(i)
+}
+par<-opar
+```
+
+******
+
+## 从图中可以看出，整体而言当n选取变大的时候，mu值几乎不变，s2值越变越小，g1和g2值也整体变小，但由于样本选取量的随机性，可能g1值和g2值会有所不同，整体而言，当n变大时，峰度值更接近于 0，此时的总体数据分布与正态分布的陡缓程度相似，同时偏度值也接近于 0，此时的总体数据分布与正态分布的偏斜程度也相似，因此对于该样本而言，选取 样本量增加，总体数据分布更接近于正态分布。
+
+******
+# Histogram of exercise_data
+```{r,echo=TRUE,prompt=TRUE}
+# 作样本数据的histogram图并作line，将histogram颜色改为白色并删去x轴名字和图表名
+exercise_den <- density(exercise_data)
+par(pin = c(4,2))
+hist(exercise_data,freq = FALSE,breaks = 40,xlab = ' ',
+     ylab = 'Density',main = ' ',col = 'white')
+lines(exercise_den,col = 'red',lwd = 1.5)
+```

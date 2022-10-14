@@ -1,0 +1,128 @@
+---
+title: "Final project"
+author: "Leo"
+date: '11/06/22'
+output: 
+  pdf_document:
+    latex_engine: xelatex
+    fig_caption: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# First include basic settings and related packages.
+```{r,echo=TRUE,prompt=TRUE,message=FALSE}
+library(tidyverse)
+library(skimr)
+library(MASS)
+library(openxlsx)
+library(pander)
+```
+
+# Read and roughly view data 'JAAD RAW DATA' in project's working directory
+```{r,echo=TRUE,prompt=TRUE}
+rawdata <- read.xlsx("JAAD RAW DATA.xlsx")
+head(rawdata)
+skim(rawdata)
+```
+
+******
+
+# Effect of age on AGA level in male or female
+## 1st. Divide data into two groups via gender and delete col with NA
+```{r,echo=TRUE,prompt=TRUE}
+male_data <- rawdata[grep(pattern="0",rawdata$FEMALE),]
+male_data <- male_data[grep(pattern="1",male_data$AGA),]
+male_data <- male_data[,-5]
+female_data <- rawdata[grep(pattern="1",rawdata$FEMALE),]
+female_data <- female_data[grep(pattern="1",female_data$AGA),]
+female_data <- female_data[,-4]
+```
+
+******
+
+## 2nd. Conduct some EDA
+### Point and line plot of AGA level against AGE.YEARS
+```{r,echo=TRUE,prompt=TRUE}
+male_data%>%
+  ggplot(mapping = aes(x = AGE.YEARS,y = NHS)) + 
+  geom_point() + 
+  geom_line() + 
+  ggtitle("Relationship between AGA level(NHS) and 
+          Patients' age in male")
+female_data%>%
+  ggplot(mapping = aes(x = AGE.YEARS,y = LS)) + 
+  geom_point() + 
+  geom_line() + 
+  ggtitle("Relationship between AGA level(LS) and 
+          Patients' age in female")
+```
+
+******
+
+## 3rd. Fit a linear regression model to explain the AGA level
+```{r,echo=TRUE,prompt=TRUE}
+full.model1 <- lm(NHS ~ .,data = male_data)
+summary(full.model1)
+full.model2 <- lm(LS ~ .,data = female_data)
+summary(full.model2)
+```
+
+******
+
+## 4th. Variable Selection(only one variable maybe meaningless)
+```{r,echo=TRUE,prompt=TRUE}
+stepwiseSelection1 <- stepAIC(full.model1,direction = "both",
+                              trace = FALSE,k = log(NROW(male_data)))
+summary(stepwiseSelection1)
+pander::pander(stepwiseSelection1)
+stepwiseSelection2 <- stepAIC(full.model2,direction = "both",
+                             trace = FALSE,k = log(NROW(female_data)))
+summary(stepwiseSelection2)
+pander::pander(stepwiseSelection2)
+```
+
+******
+
+## 5th. Interpretation
+$$
+\hat{NHS(male)} = 1.631 + 0.0378 * AGE.YEARS
+$$
+
+### Keep other covariates unchanged, the NHS of male is expected to increase by 0.0378 with every unit increase of AGE.YEARS.
+
+### By fitting models, we discovered that there is little correlation between level of AGA(LS) and AGE.YEARS in female.(Maybe it's because the female sample is too small)
+
+******
+
+# Effect of gender on AGA(T-test)
+## Conduct some EDA
+### Bar plot of AGA level against gender
+```{r,echo=TRUE,prompt=TRUE}
+AGA_data <- rawdata[grep(pattern="1",rawdata$AGA),]
+combine_data <- AGA_data%>%
+  pivot_longer(c(NHS,LS),names_to = "GENDER.TYPE",values_to = "AGA.level")
+combine_data <- na.omit(combine_data)
+colorset <- c("#58B2DC","#0089A7")
+combine_data%>%
+  group_by(GENDER.TYPE) %>%
+  summarise(n = n(), AGA.level = mean(AGA.level)) %>%
+  ggplot(aes(x = GENDER.TYPE, y = AGA.level, fill = GENDER.TYPE)) + geom_bar(stat = "identity") + 
+  ggtitle("Bar plot of AGA level against gender") + 
+  scale_fill_manual(values = colorset)
+```
+
+******
+
+## Delete cols including NA and conduct T-test
+```{r,echo=TRUE,prompt=TRUE}
+gender_data <- rawdata[,-c(4,5)]
+ttest<- t.test(gender_data$AGA~gender_data$FEMALE)
+pander::pander(ttest)
+```
+
+******
+## Discovery
+### T-test shows that p is less than 0.01, which means there is true differences between male and female in AGA. So the effect of gender on AGA is considerable.

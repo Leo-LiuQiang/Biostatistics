@@ -1,0 +1,131 @@
+---
+title: "Questionnaire"
+author: "Qiang Liu"
+date: '2022-10-03'
+output: 
+  pdf_document:
+    latex_engine: xelatex
+    fig_caption: yes
+header-includes:
+  - |
+    ```{=latex}
+    \usepackage{fvextra}
+    \DefineVerbatimEnvironment{Highlighting}{Verbatim}{
+      showspaces = false,
+      showtabs = false,
+      breaklines,
+      commandchars=\\\{\}
+    }
+    ```
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# First include basic settings and related packages.
+```{r,echo=TRUE,prompt=TRUE,message=FALSE}
+library(tidyverse)
+library(skimr)
+library(MASS)
+library(openxlsx)
+library(pander)
+library(ggplot2)
+library(Rcpp)
+library(dplyr)
+library(ggstatsplot)
+library(plyr)
+library(maptools)
+library(PerformanceAnalytics)
+library(corrplot)
+```
+
+******
+
+# Read and roughly view data 'Questionnaire' in project's working directory
+```{r,echo=TRUE,prompt=TRUE}
+questionnaire <- read.xlsx("Questionnaire.xlsx")
+head(questionnaire)
+skim(questionnaire)
+```
+
+******
+
+```{r,echo=TRUE,prompt=TRUE}
+cor_questionnaire <- questionnaire[,-1]
+head(cor_questionnaire)
+skim(cor_questionnaire)
+```
+
+******
+
+```{r,echo=TRUE,prompt=TRUE}
+cor_matr = cor(cor_questionnaire)
+write.table(cor_matr, file="cor_matr.xls",row.names=F, 
+            col.names=T,quote=FALSE,sep="\t")
+corrplot(cor_matr, type="upper", order="hclust", 
+         tl.col="black", tl.srt=45)
+chart.Correlation(cor_questionnaire,histogram = TRUE,pch=30)
+pander::pander(rcorr(as.matrix(cor_questionnaire)))
+```
+
+******
+
+```{r,echo=TRUE,prompt=TRUE}
+full.model1 <- lm(Acceptance.of.new.method ~ . ,data = cor_questionnaire)
+summary(full.model1)
+```
+
+******
+
+
+```{r,echo=TRUE,prompt=TRUE}
+stepwiseSelection1 <- stepAIC(full.model1,direction="both",
+                              trace=FALSE,k=log(NROW(cor_questionnaire)))
+summary(stepwiseSelection1)
+#Ssadasdasdasdasdasdsadasdsa
+#sadsadsadasdasdsadsadasd
+#sadasdasdasdasdassadasdasda
+#sadasgregerhgefwerefasfd
+#sdzgayhrhava bgfdhd
+#dgdsfhsjhrthjerherh
+#sdgsdghsdhdfhhfdgsgsd
+#Ssadasdasdasdasdasdsadasdsa
+#sadsadsadasdasdsadsadasd
+#sadasdasdasdasdassadasdasda
+#sadasgregerhgefwerefasfd
+#sdzgayhrhava bgfdhd
+#dgdsfhsjhrthjerherh
+#sdgsdghsdhdfhhfdgsgsd
+pander::pander(stepwiseSelection1)
+```
+
+
+******
+
+$$
+\hat{Acceptance.of.new.method} = 0.5185 + 0.2615 * Knowledge.of.exosome + \\0.0135 * Acceptance.of.price(Hundred) + 0.1919 * Degree.of.anxiety + 0.3411 * Acceptance.of.EM
+$$
+
+******
+
+```{r,echo=TRUE,prompt=TRUE}
+full.model2 <- lm(Acceptance.of.price ~ . ,data = cor_questionnaire)
+summary(full.model2)
+```
+
+******
+
+```{r,echo=TRUE,prompt=TRUE}
+stepwiseSelection2 <- stepAIC(full.model2,direction="both",trace=FALSE,k=log(NROW(cor_questionnaire)))
+summary(stepwiseSelection2)
+pander::pander(stepwiseSelection2)
+```
+
+******
+
+$$
+\hat{Acceptance.of.price(Hundred)} = 18.98 - 0.1973 * Age - 0.6794 * Income(Thousand) - \\1.787 * Knowledge.of.exosome + 2.007 * Acceptance.of.new.method
+$$
+
+******

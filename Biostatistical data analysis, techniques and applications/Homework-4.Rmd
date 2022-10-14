@@ -1,0 +1,79 @@
+---
+title: "Homework-4"
+author: "Leo"
+date: '17/05/2022'
+output: 
+  pdf_document:
+    latex_engine: xelatex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# First include basic settings and related packages.
+```{r,echo=TRUE,prompt=TRUE,message=FALSE}
+library(tidyverse)
+library(skimr)
+library(MASS)
+```
+
+******
+
+# Data analysis with dataset 'bridge.txt'
+
+## 1st. read data 'bridge.txt' in project's working directory
+```{r,echo=TRUE,prompt=TRUE}
+bridge <- read.table("bridge.txt",header = T)
+head(bridge)
+skim(bridge)
+```
+
+******
+
+## 2nd. Delete the variable ‘Case’ and transform all the variables to the log form
+```{r,echo=TRUE,prompt=TRUE}
+bridge <- bridge[,-1]
+bridge <- log(bridge)
+head(bridge)
+```
+
+******
+
+## 3rd. EDA examples
+```{r,echo=TRUE,prompt=TRUE}
+#Concerning design time of a bridge, I prefer Numbers of structural drawings to be more relevant. First let's conduct an EDA.
+bridge%>%
+  ggplot(mapping = aes(x = Dwgs,y = Time)) + 
+  geom_point() + 
+  geom_line() + 
+  ggtitle("Relationship between Design time of a bridge and 
+          Numbers of structural drawings")
+```
+
+******
+
+## 4th. Fit a linear regression model to explain the Design time of a bridge
+```{r,echo=TRUE,prompt=TRUE}
+#Construct the full linear regression model using Time as the response variable
+full.model <- lm(Time ~ .,data = bridge)
+summary(full.model)
+```
+
+******
+
+## 5th. Variable Selection(Backward Selection)
+```{r,echo=TRUE,prompt=TRUE}
+#Using stepwise selection with BIC
+stepwiseSelection <- stepAIC(full.model,direction = "both",
+                             trace = FALSE,k = log(NROW(bridge)))
+summary(stepwiseSelection)
+```
+
+## 6th. Interpretation
+$$
+\hat{log(Time)} = 2.66 + 1.04 * log(Dwgs) + 0.29 * log(Spans)
+$$
+
+### 1.Keep other covariates unchanged, the log(Time) is expected to increase by 1.04% with every unit increase of log(Dwgs).
+
+### 2.Keep other covariates unchanged, the log(Time) is expected to increase by 0.29% with every unit increase of log(Spans).

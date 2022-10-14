@@ -1,0 +1,48 @@
+---
+title: "Homework 2 2022.05.05"
+author: "Leo"
+date: '05/05/2022'
+output: pdf_document
+---
+
+```{r setup,include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(ggplot2)
+library(pander)
+```
+First loading basic settings and related packages, and the code is not displayed.
+----
+
+# Density plot of Sepal.Width
+
+Using ggplot() to draw a Density plot. The parameters include selected object,colour you like, intensity of colour and title of the plot.
+----
+```{r,echo=TRUE,prompt=TRUE}
+ggplot(data = iris,mapping = aes(x = Sepal.Width)) +
+  geom_density(fill = "purple",alpha = 0.2) + 
+  ggtitle("Density plot of Sepal.Width")
+```
+
+*********
+
+Histogram of Petal.Length
+====
+Using ggplot() to draw a Histogram plot. The parameters include selected object,colour you like, intensity of colour, number of bin and title of the plot.
+----
+```{r,echo=TRUE,prompt=TRUE}
+ggplot(data = iris,mapping = aes(x = Petal.Length)) +
+  geom_histogram(fill = "green",alpha = 0.8,bins = 25) +
+  ggtitle("Histogram of Petal.Length")  
+```
+
+*********
+
+Summary statistics of Petal.Length
+====
+Using summary() to get summary statistics of interested data and tabulate them by using functions in a package named pander.
+----
+```{r,echo=TRUE,prompt=TRUE}
+Sum <- summary(iris$Sepal.Length)
+pander::pander(Sum)
+```
+

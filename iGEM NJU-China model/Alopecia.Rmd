@@ -1,0 +1,190 @@
+---
+title: "Alopecia"
+author: "Qiang Liu"
+date: '2022-09-21'
+output: 
+  pdf_document:
+    latex_engine: xelatex
+    fig_caption: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# First include basic settings and related packages.
+```{r,echo=TRUE,prompt=TRUE,message=FALSE}
+library(tidyverse)
+library(skimr)
+library(MASS)
+library(openxlsx)
+library(pander)
+library(ggplot2)
+library(Rcpp)
+library(dplyr)
+library(viridis)
+library(ggstatsplot)
+library(plyr)
+library(hrbrthemes)
+```
+
+******
+
+# Read and roughly view data 'Alopecia' in project's working directory
+```{r,echo=TRUE,prompt=TRUE}
+age_countrydata <- read.xlsx("Age and Country.xlsx")
+countrydata <- read.xlsx("Country.xlsx")
+gender_degreedata <- read.xlsx("Gender and Degree.xlsx")
+age_degreedata <- read.xlsx("Age and Degree.xlsx")
+skim(age_countrydata)
+skim(countrydata)
+skim(gender_degreedata)
+skim(age_degreedata)
+```
+
+******
+
+```{r,echo=TRUE,prompt=TRUE}
+age_countrydata%>%
+  ggplot(aes(x=Country,y=Age))+
+  geom_violin(aes(fill=Country),trim=FALSE,alpha=0.5)+
+  scale_fill_brewer()+
+  xlab("Country")+
+  ylab("Age(Year)")+
+  ylim(0,80)+
+  ggtitle("Violin plot of age of alopecia patients in different country")+
+  theme_classic()
+```
+
+******
+
+```{r,echo=TRUE,prompt=TRUE}
+pdf("boxplot of country.pdf",width=8,height=8)
+ggbetweenstats(
+  data=age_countrydata,
+  x=Country,
+  y=Age,
+  title="Age distribution of alopecia patients in different country",
+  message=FALSE
+)
+```
+
+******
+
+```{r,echo=TRUE,prompt=TRUE}
+pdf("boxplot of gender.pdf",width=8,height=8)
+ggbetweenstats(
+  data=age_countrydata,
+  x=Gender,
+  y=Age,
+  title="Age distribution of alopecia patients in different gender",
+  message=FALSE
+)
+```
+
+******
+
+```{r,echo=TRUE,prompt=TRUE}
+pdf("boxplot of time.pdf",width=8,height=8)
+ggbetweenstats(
+  data=age_countrydata,
+  x=Time,
+  y=Age,
+  title="Age distribution of alopecia patients in different Time",
+  message=FALSE
+)
+```
+
+******
+
+```{r,echo=TRUE,prompt=TRUE}
+male_degreedata <- gender_degreedata[grep(pattern="M",gender_degreedata$Gender),]
+female_degreedata <- gender_degreedata[grep(pattern="F",gender_degreedata$Gender),]
+```
+
+******
+
+```{r,echo=TRUE,prompt=TRUE}
+male_degreedata %>%
+  ggplot(aes(x=HNS, fill=Country)) +
+    geom_histogram(color="#e9ecef", alpha=0.6, position = 'identity') +
+    scale_fill_brewer(palette = "Paired") +
+    labs(fill="") + 
+  theme(panel.grid.major=element_blank(),panel.grid.minor=element_blank(),
+        panel.background=element_blank(),axis.line=element_line(colour="black"))
+
+female_degreedata %>%
+  ggplot(aes(x=LS, fill=Country)) +
+    geom_histogram(color="#e9ecef", alpha=0.6, position = 'identity') +
+    scale_fill_brewer(palette = "Paired") +
+    labs(fill="")+ 
+  theme(panel.grid.major=element_blank(),panel.grid.minor=element_blank(),
+        panel.background=element_blank(),axis.line=element_line(colour="black"))
+```
+
+******
+
+```{r,echo=TRUE,prompt=TRUE}
+pdf("boxplot of female degree.pdf",width=8,height=8)
+ggbetweenstats(
+  data=female_degreedata,
+  x=Country,
+  y=LS,
+  title="LS distribution of alopecia patients in different Country",
+  message=FALSE
+)
+```
+
+******
+
+```{r,echo=TRUE,prompt=TRUE}
+age_degreedata %>%
+  ggplot(aes(x=Age)) +
+    geom_histogram(color="black", alpha=0.6, position = 'identity') +
+    scale_fill_continuous() +
+    labs(fill="")+ 
+  theme(panel.grid.major=element_blank(),panel.grid.minor=element_blank(),
+        panel.background=element_blank(),axis.line=element_line(colour="black"))
+
+male_agedata <- age_degreedata[grep(pattern="M",age_degreedata$Gender),]
+```
+
+******
+
+```{r,echo=TRUE,prompt=TRUE}
+linear.model <- lm(HNS~Age,data=male_agedata)
+summary(linear.model)
+```
+
+******
+
+```{r,echo=TRUE,prompt=TRUE}
+stepwiseSelection <- stepAIC(linear.model,direction="both",
+                             trace=FALSE,k=log(NROW(male_agedata)))
+summary(stepwiseSelection)
+pander::pander(stepwiseSelection)
+```
+
+******
+
+$$
+\hat{HNS(male)} = 2.282 + 0.02451 * Age
+$$
+
+******
+
+```{r,echo=TRUE,prompt=TRUE}
+pdf("Cor of Age and Degree of male androgenetic alopecia (HNS).pdf",width=9,height=7.5)
+ggscatterstats(
+  data=male_agedata,
+  x=Age,
+  y=HNS,
+  type="p",
+  bin=30,
+  conf.level=0.99,
+  messages=TRUE
+)
+dev.off
+```
+
+******
