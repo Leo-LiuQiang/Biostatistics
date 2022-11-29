@@ -1,0 +1,86 @@
+---
+title: "practice14"
+author: "Qiang Liu"
+date: "2022-11-29"
+output:
+  pdf_document: 
+    latex_engine: xelatex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r,echo=TRUE,prompt=TRUE,warning=FALSE}
+library(dplyr)
+my_data <- read.csv("weight.csv")
+my_data <- my_data %>% mutate(date=as.Date(date), status=as.factor(status))
+## take a look at the data
+summary(my_data)
+head(my_data)
+```
+
+******
+
+```{r,echo=TRUE,prompt=TRUE,warning=FALSE}
+## visual plot
+library(ggplot2)
+library(dplyr)
+my_data %>% ggplot(aes(date, weight, color=status)) + geom_point()
+## subset data
+sub_data <- my_data %>% filter(date < date[min(which(status == 1))])
+## hist and density plot
+ggplot(sub_data, aes(x=weight)) +
+  geom_histogram(aes(y=..density..),
+                 bins = 10, colour="red", fill="white")+
+  geom_density(alpha=.5, fill="#dddddd")
+## qq-plot
+library("car")
+out <- qqPlot(sub_data$weight, col.lines = 'red')
+## shapiro.test()
+shapiro.test(sub_data$weight)
+plot(weight ~ date, col="red", data = sub_data)
+sub_data %>% ggplot(aes(date, weight)) + geom_point(color="red")
+```
+
+******
+
+```{r,echo=TRUE,prompt=TRUE,warning=FALSE}
+## linear regression model
+growth.lm <- lm(weight ~ date, data = sub_data)
+summary(growth.lm)
+par(mfrow=c(2,2))
+plot(growth.lm)
+par(mfrow=c(1,1))
+library(ggpubr)
+sub_data %>% ggplot(aes(date, weight)) + geom_point() +
+  geom_smooth(method="lm", col="red") +
+  stat_regline_equation() +
+  labs(title = "Weight over time",
+       x = "Date",
+       y = "Weight (kg)")
+my_data$predict1 <- predict(growth.lm, my_data)
+my_data %>% ggplot(aes(date, weight, color=status)) + geom_point() +
+  geom_point(aes(date, predict1), color="red") +
+  scale_color_manual(values = c("#00AFBB", "#E7B800"))
+growth.lm2 <- lm(weight ~ date + status, data = my_data)
+summary(growth.lm2)
+par(mfrow=c(2,2))
+plot(growth.lm2)
+par(mfrow=c(1,1))
+my_data$predict2 <- predict(growth.lm2, my_data)
+my_data %>% ggplot(aes(date, weight, color=status)) + geom_point() +
+  geom_point(aes(date, predict2), color="red") +
+  scale_color_manual(values = c("#00AFBB", "#E7B800"))
+```
+
+******
+
+```{r,echo=TRUE,prompt=TRUE,warning=FALSE}
+model1 <- lm(weight ~ date, data = my_data)
+model1.sum <- summary(model1)
+model1.sum$r.squared
+model2 <- lm(weight ~ date + status, data = my_data)
+model2.sum <- summary(model2)
+model2.sum$r.squared
+```

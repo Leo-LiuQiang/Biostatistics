@@ -1,0 +1,260 @@
+---
+title: "practice5"
+author: "Qiang Liu"
+date: "2022-10-04"
+output:
+  pdf_document: 
+    latex_engine: xelatex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r,echo=TRUE,prompt=TRUE}
+## sampling times
+N <- 10000
+library(moments)
+
+## mu function for sampling statisitics
+normSample <- function(n){
+x <- unlist(lapply(1:N, function(i){
+mean(rnorm(n))
+}))
+
+## output
+out <- c(mu = mean(x),s2 = var(x),g1 = skewness(x),g2 = kurtosis(x)-3)
+
+## histogram
+hist(x, probability = T, breaks = 30, xlab = "", main = sprintf("n=%s",n))
+## legend
+lgd <- sprintf("%s: %s", names(out), round(out, 5))
+legend('topright', legend = lgd, ncol = 1, box.lwd = NA, cex = 0.5, title = "sample")
+## in theory
+th <- c(mu=0, s2=1/n, g1=0, g2=0)
+lgd2 <- sprintf("%s: %s", names(th), round(th, 5))
+legend('topleft', legend = lgd2, ncol = 1, box.lwd = NA, cex = 0.5, text.col = 'red', title = "population")
+px <- seq(-3,3,length.out=100)
+py <- dnorm(px, mean = 0, sd = sqrt(1/n))
+lines(px, py, col = "red", lwd = 2, lty = 5)
+out
+}
+op <- par(mfrow = c(2, 2))
+normSample(5)
+normSample(10)
+normSample(30)
+normSample(50)
+par(op)
+```
+
+******
+
+```{r,echo=TRUE,prompt=TRUE}
+N <- 10000
+library(moments)
+## mu function for sampling statisitics
+expSample <- function(n){
+x <- unlist(lapply(1:N, function(i){
+mean(rexp(n))
+}))
+2
+## output
+out <- c(mu = mean(x),s2 = var(x),g1 = skewness(x),g2 = kurtosis(x)-3)
+## histogram
+hist(x, probability = T, breaks = 30, xlab = "", main=sprintf("n=%s",n))
+## legend
+lgd <- sprintf("%s: %s", names(out), round(out, 5))
+legend('topright', legend = lgd, ncol = 1, box.lwd = NA, cex = 0.5, title = "sample")
+## in theory
+th <- c(mu = 0, s2 = 1, g1 = 0, g2 = 0)
+lgd2 <- sprintf("%s: %s", names(th), round(th, 5))
+legend('topleft', legend = lgd2, ncol = 1, box.lwd = NA, cex = 0.5, text.col = 'red', title = "population")
+px <- seq(-3,3,length.out = 100)
+py <- dnorm(px, mean = 1, sd = sqrt(1/n))
+lines(px, py, col = "red", lwd = 2, lty = 5)
+## return
+out
+}
+op <- par(mfrow = c(2, 2))
+expSample(5)
+expSample(10)
+expSample(30)
+expSample(50)
+par(op)
+```
+
+******
+
+```{r,echo=TRUE,prompt=TRUE}
+x <- seq(-5, 5, length.out = 100)
+df1 <- dt(x, df = 1)
+df4 <- dt(x, df = 4)
+df100 <- dt(x, df = 100)
+plot(x, df1, ylim = range(c(df1, df4, df100)), bty = "l",
+type = "l", lwd = 2, xlab = "", ylab = "", main = "t distribution")
+lines(x, df4, col = "orange", lwd = 2)
+lines(x, df100, col = "red", lwd = 2)
+```
+
+******
+
+```{r,echo=TRUE,prompt=TRUE}
+## sampling times
+N <- 10000
+library(moments)
+## mu function for sampling statisitics
+tSample <- function(n){
+x <- unlist(lapply(1:N, function(i){
+o <- rnorm(n)
+mean(o) / (sd(o)/sqrt(n))
+}))
+## output
+out <- c(mu=mean(x),s2=var(x),g1=skewness(x),g2=kurtosis(x)-3)
+## histogram
+hist(x, probability = T, breaks = 30, xlab = "", main=sprintf("df=%s",n))
+## legend
+lgd <- sprintf("%s: %s", names(out), round(out, 5))
+legend('topright', legend = lgd, ncol = 1, box.lwd = NA, cex = 0.5, title = "sample")
+## in theory
+th <- c(mu=0, s2=n/(n-2), g1=0, g2=6/(n-4))
+lgd2 <- sprintf("%s: %s", names(th), round(th, 5))
+legend('topleft', legend = lgd2, ncol = 1, box.lwd = NA, cex = 0.5, text.col = 'red', title = "population")
+px <- seq(-3,3,length.out=100)
+py <- dt(px, df = n)
+lines(px, py, col="red", lwd=2, lty=5)
+## return
+out
+}
+op <- par(mfrow=c(2, 2))
+tSample(5)
+tSample(10)
+tSample(20)
+tSample(40)
+par(op)
+```
+
+******
+
+```{r,echo=TRUE,prompt=TRUE}
+x <- seq(0, 50, length.out = 200)
+df1 <- dchisq(x, df=1)
+df4 <- dchisq(x, df=4)
+df10 <- dchisq(x, df=10)
+df20 <- dchisq(x, df=20)
+df1[is.infinite(df1)] <- NA
+plot(x, df1, ylim = c(0, 0.25), bty = "l",
+type = "l", lwd = 2, xlab = "", ylab = "", main = "Chi-Squared distribution")
+lines(x, df4, col = "blue", lwd = 2)
+lines(x, df10, col = "orange", lwd = 2)
+lines(x, df20, col = "red", lwd = 2)
+```
+
+******
+
+```{r,echo=TRUE,prompt=TRUE}
+from <- 0
+to <- 30
+df <- 10
+x <- seq(from, to, length.out = 500)
+df10 <- dchisq(x, df=df)
+plot(x, df10, bty = "l", col = "orange", yaxt='n', xaxt='n',
+type = "l", lwd = 2, xlab = "", ylab = "",
+main = expression(chiˆ2~"distribution"), sub = sprintf("df=%s", df))
+x0 <- qchisq(0.05, df=df, lower.tail=F)
+x1 <- x[x > x0]
+y1 <- dchisq(x1, df=df)
+polygon(c(x0,x1,to), c(0,y1,0), border = NA, col = "grey")
+text(x0, 0, labels = expression(chi[0.05]^2), pos=2, xpd=T)
+axis(1, at=round(x0, 2))
+x0 <- qchisq(0.05, df=df, lower.tail=T)
+x2 <- x[x < x0]
+y2 <- dchisq(x2, df=df)
+polygon(c(from,x2,x0), c(0,y2,0), border = NA, col = "grey")
+text(x0, 0, labels = expression(chi[0.95]^2), pos=4, xpd=T)
+axis(1, at=round(x0, 2))
+```
+
+******
+
+```{r,echo=TRUE,prompt=TRUE}
+## sampling times
+N <- 10000
+library(moments)
+## mu function for sampling statisitics
+chisqSample <- function(n){
+x <- unlist(lapply(1:N, function(i){
+o <- rnorm(n)
+n*var(o)
+}))
+## output
+out <- c(mu=mean(x),s2=var(x),g1=skewness(x),g2=kurtosis(x)-3)
+## histogram
+h <- hist(x, probability = T, breaks = 30, xlab = "", main=sprintf("df=%s",n))
+## legend
+lgd <- sprintf("%s: %s", names(out), round(out, 5))
+legend('topright', legend = lgd, ncol = 1, box.lwd = NA, cex = 0.5, title = "sample")
+## in theory
+th <- c(mu=n, s2=n*2, g1=sqrt(8/n), g2=12/n)
+lgd2 <- sprintf("%s: %s", names(th), round(th, 5))
+legend('topleft', legend = lgd2, ncol = 1, box.lwd = NA, cex = 0.5, text.col = 'red', title = "population")
+px <- seq(min(h$mids),max(h$mids),length.out=100)
+py <- dchisq(px, df = n)
+lines(px, py, col="red", lwd=2, lty=5)
+## return
+out
+}
+op <- par(mfrow=c(2, 2))
+chisqSample(2)
+chisqSample(10)
+chisqSample(20)
+chisqSample(40)
+par(op)
+```
+
+******
+
+```{r,echo=TRUE,prompt=TRUE}
+## sampling times
+N <- 10000
+library(moments)
+## mu function for sampling statisitics
+chisqSample2 <- function(n){
+x <- unlist(lapply(1:N, function(i){
+o <- rexp(n)
+n*var(o)
+}))
+## output
+out <- c(mu=mean(x),s2=var(x),g1=skewness(x),g2=kurtosis(x)-3)
+## histogram
+h <- hist(x, probability = T, breaks = 30, xlab = "", main=sprintf("df=%s",n))
+## legend
+lgd <- sprintf("%s: %s", names(out), round(out, 5))
+legend('topright', legend = lgd, ncol = 1, box.lwd = NA, cex = 0.5, title = "sample")
+## in theory
+th <- c(mu=n, s2=n*2, g1=sqrt(8/n), g2=12/n)
+lgd2 <- sprintf("%s: %s", names(th), round(th, 5))
+legend('top', legend = lgd2, ncol = 1, box.lwd = NA, cex = 0.5, text.col = 'red', title = "population")
+px <- seq(min(h$mids),max(h$mids),length.out=100)
+py <- dchisq(px, df = n)
+lines(px, py, col="red", lwd=2, lty=5)
+## return
+out
+}
+op <- par(mfrow=c(2, 2))
+chisqSample2(2)
+chisqSample2(10)
+chisqSample2(20)
+chisqSample2(40)
+par(op)
+```
+
+******
+
+```{r,echo=TRUE,prompt=TRUE}
+x <- seq(0, 5, length.out = 100)
+df1 <- df(x, df1 = 4, df2 = 20)
+df2 <- df(x, df1 = 20, df2 = 4)
+plot(x, df1, ylim = c(0, 0.8), bty = "l", col = "orange",
+type = "l", lwd = 2, xlab = "", ylab = "", main = "F distribution")
+lines(x, df2, col = "blue", lwd = 2)
+```

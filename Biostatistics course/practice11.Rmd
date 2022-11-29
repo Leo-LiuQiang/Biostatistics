@@ -1,0 +1,43 @@
+---
+title: "practice11"
+author: "Qiang Liu"
+date: "2022-11-15"
+output:
+  pdf_document: 
+    latex_engine: xelatex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r,echo=TRUE,prompt=TRUE}
+library(MASS) # load the MASS package
+height.survey = survey$Height
+mean(height.survey, na.rm=TRUE)
+height.response = na.omit(survey$Height)
+sigma <- 9.48
+n <- length(height.response)
+sem <- sigma/sqrt(n)
+sem
+E <- qnorm(.975) * sem
+E
+xbar <- mean(height.response) # sample mean
+xbar + c(-E, E)
+```
+
+******
+
+```{r,echo=TRUE,prompt=TRUE}
+library(TeachingDemos)
+z.test(height.response, sd=sigma)
+height.response = na.omit(survey$Height)
+## Then we compute the sample standard deviation.
+n <- length(height.response)
+s <- sd(height.response) # sample standard deviation
+SE <- s/sqrt(n); SE
+E <- qt(.975, df=n-1)*SE; E
+xbar <- mean(height.response) # sample mean
+xbar + c(-E, E)
+t.test(height.response)
+```

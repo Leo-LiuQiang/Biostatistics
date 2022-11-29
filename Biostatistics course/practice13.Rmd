@@ -1,0 +1,119 @@
+---
+title: "practice13"
+author: "Qiang Liu"
+date: "2022-11-22"
+output:
+  pdf_document: 
+    latex_engine: xelatex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r,echo=TRUE,prompt=TRUE}
+data("ToothGrowth")
+head(ToothGrowth)
+data("PlantGrowth")
+head(PlantGrowth)
+```
+
+******
+```{r,echo=TRUE,prompt=TRUE}
+my_data <- PlantGrowth
+library(dplyr)
+group_by(my_data, group) %>%
+  summarise(
+    count = n(),
+    mean = mean(weight, na.rm = TRUE),
+    sd = sd(weight, na.rm = TRUE)
+    )
+# Box plot
+boxplot(weight ~ group, data = my_data,
+        xlab = "Treatment", ylab = "Weight",
+        frame = FALSE, col = c("#00AFBB", "#E7B800", "#FC4E07"))
+# Compute the analysis of variance
+res.aov <- aov(weight ~ group, data = my_data)
+summary(res.aov)
+TukeyHSD(res.aov)
+## plot
+plot(TukeyHSD(res.aov))
+library(multcomp)
+tuk <- glht(res.aov, linfct = mcp(group = "Tukey"))
+summary(tuk)
+plot(tuk)
+plot(cld(tuk, level=0.05))
+library(rstatix)
+my_data %>% dunn_test(weight ~ group)
+pairwise.t.test(my_data$weight, my_data$group,
+                p.adjust.method = "BH")
+# 1. Homogeneity of variances
+plot(res.aov, 1)
+bartlett.test(weight ~ group, data = my_data)
+fligner.test(weight ~ group, data = my_data)
+library(car)
+leveneTest(weight ~ group, data = my_data)
+library(rstatix)
+my_data %>%
+  group_by(group) %>%
+  identify_outliers(weight)
+outlierTest(res.aov)
+## ANOVA test with no assumption of equal variances
+oneway.test(weight ~ group, data = my_data)
+## Pairwise t-tests with no assumption of equal variances
+pairwise.t.test(my_data$weight, my_data$group,
+                p.adjust.method = "BH", pool.sd = FALSE)
+# 2. Normality
+plot(res.aov, 2)
+# Extract the residuals
+aov_residuals <- residuals(object = res.aov)
+# Run Shapiro-Wilk test
+shapiro.test(x = aov_residuals )
+kruskal.test(weight ~ group, data = my_data)
+data("ToothGrowth")
+head(ToothGrowth)
+```
+
+******
+
+```{r,echo=TRUE,prompt=TRUE}
+# Store the data in the variable my_data
+my_data <- ToothGrowth
+head(my_data)
+str(my_data)
+# Generate frequency tables:
+table(my_data$supp, my_data$dose)
+# Box plot with two factor variables
+boxplot(len ~ supp * dose, data=my_data, frame = FALSE,
+        col = c("#00AFBB", "#E7B800"), ylab="Tooth Length")
+# Two-way interaction plot
+with(my_data,
+     interaction.plot(x.factor = dose, trace.factor = supp,
+                      response = len, fun = mean,
+                      type = "b", legend = TRUE,
+                      xlab = "Dose", ylab="Tooth Length",
+                      pch=c(1,19), col = c("#00AFBB", "#E7B800"))
+)
+library(gplots)
+plotmeans(len ~ interaction(supp, dose, sep = " "), data = my_data,
+          connect = list(c(1,3,5), c(2,4,6)),
+          main = "Interaction Plot with 95% CIs",
+          xlab = "Treatment and Dose Combination", ylab="Tooth Length",
+          barcol = c("#00AFBB", "#E7B800"), col = c("#00AFBB", "#E7B800"))
+res.aov2 <- aov(len ~ supp + dose, data = my_data)
+summary(res.aov2)
+# Two-way ANOVA with interaction effect
+# These two calls are equivalent
+res.aov3 <- aov(len ~ supp * dose, data = my_data)
+res.aov3 <- aov(len ~ supp + dose + supp:dose, data = my_data)
+summary(res.aov3)
+require("dplyr")
+group_by(my_data, supp, dose) %>%
+  summarise(
+    count = n(),
+    mean = mean(len, na.rm = TRUE),
+    sd = sd(len, na.rm = TRUE)
+  )
+model.tables(res.aov3, type="means", se = TRUE)
+library(HH)
+```

@@ -1,0 +1,137 @@
+---
+title: "practice9"
+author: "Qiang Liu"
+date: "2022-10-18"
+output:
+  pdf_document: 
+    latex_engine: xelatex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r,echo=TRUE,prompt=TRUE}
+data("iris")
+head(iris)
+data("ToothGrowth")
+head(ToothGrowth)
+data("PlantGrowth")
+head(PlantGrowth)
+```
+
+******
+
+```{r,echo=TRUE,prompt=TRUE}
+# Store the data in the variable test_data
+test_data <- ToothGrowth
+set.seed(123456)
+dplyr::sample_n(test_data, 10)
+library(ggplot2)
+# Basic density plot
+p <- ggplot(test_data, aes(x=len)) + geom_density(color='black', fill='#dddddd')+
+  geom_vline(aes(xintercept=mean(len)), color="red", linetype="dashed", size=1)
+p
+ggplot(test_data, aes(x=len)) +
+geom_histogram(aes(y=..density..), colour="red", fill="white")+
+geom_density(alpha=.5, fill="#dddddd")
+## Base R function
+qqnorm(test_data$len, frame = FALSE)
+qqline(test_data$len, col = "red", lwd = 2)
+p <- ggplot(test_data, aes(sample = len)) +
+stat_qq() + stat_qq_line(color='red')
+print(p)
+library("car")
+out <- qqPlot(test_data$len, col.lines = 'red')
+```
+
+******
+
+```{r,echo=TRUE,prompt=TRUE}
+shapiro.test(test_data$len)
+# Generate some random data
+set.seed(123456)
+wdata <- data.frame(
+name = paste0(rep("M_", 10), 1:10),
+weight = round(rnorm(10, 20, 2), 1)
+)
+# the first 6 rows of the data
+head(wdata)
+# Statistical summaries of weight
+summary(wdata$weight)
+# Visualize your data using box plots
+ggplot(wdata, aes(y=weight)) + geom_boxplot() + geom_jitter(aes(x=0), color='red')
+# Visual inspection of the data normality using Q-Q plots
+out <- qqPlot(wdata$weight, col.lines = 'red')
+```
+
+******
+
+```{r,echo=TRUE,prompt=TRUE}
+# One-sample t-test
+res <- t.test(wdata$weight, mu = 25)
+# Printing the results
+res
+t.test(wdata$weight, mu = 25, alternative = "less")
+t.test(wdata$weight, mu = 25, alternative = "greater")
+# printing the p-value
+res$p.value
+# printing the mean
+res$estimate
+# printing the confidence interval
+res$conf.int
+```
+
+******
+
+```{r,echo=TRUE,prompt=TRUE}
+# F-test
+res.ftest <- var.test(len ~ supp, data = test_data)
+res.ftest
+# ratio of variances
+res.ftest$estimate
+# p-value of the test
+res.ftest$p.value
+```
+
+******
+
+```{r,echo=TRUE,prompt=TRUE}
+# Visualize your data using box plots by group
+ggplot(test_data, aes(x=supp, y=len, color=supp)) + geom_boxplot()
+# Shapiro-Wilk normality test for OJ
+with(test_data, shapiro.test(len[supp == "OJ"]))
+# Shapiro-Wilk normality test for OJ
+with(test_data, shapiro.test(len[supp == "OJ"]))
+res.ftest <- var.test(len ~ supp, data = test_data)
+res.ftest
+res.ftest <- var.test(len ~ supp, data = test_data)
+res.ftest
+t.test(len ~ supp, data = test_data,
+var.equal = TRUE, alternative = "less")
+t.test(len ~ supp, data = test_data,
+var.equal = TRUE, alternative = "greater")
+```
+
+******
+
+```{r,echo=TRUE,prompt=TRUE}
+library(dplyr)
+species <- levels(iris$Species)
+out <- data.frame()
+cmps <- combn(species, 2)
+for(i in 1:ncol(cmps)){
+  cmp <- cmps[,i]
+  test_data <- iris %>% filter(Species %in% cmp) %>% select(Species,Sepal.Length)
+  pvals <- c()
+  for(s in cmp){
+    x <- test_data[test_data$Species == s, 'Sepal.Length']
+    test <- shapiro.test(x)
+    ## print(test$p.value)
+    pvals <- c(pvals, test$p.value)
+  }
+  if(all(pvals > 0.05)){
+    test <- t.test(Sepal.Length ~ Species, data=test_data)
+  }
+}
+```
