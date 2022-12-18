@@ -1,0 +1,92 @@
+---
+title: "2022fall Biostatistics Final"
+author: "191850112 Qiang Liu (刘强)"
+date: "2022-12-13"
+geometry: "left=2cm,right=2cm,top=2cm,bottom=2cm"
+output:
+  pdf_document: 
+    latex_engine: xelatex
+    toc: yes
+    toc_depth: 2
+    extra_dependencies:
+      ctex:
+         fontset=fandol
+      amsfonts: null
+      mathrsfs: null
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+\newpage
+
+# Question 1
+```{r,echo=TRUE,prompt=TRUE,message=FALSE,warning=FALSE}
+library(ggplot2)
+library(dplyr)
+data("iris") #内置数据集iris
+head(iris) #查看前六行数据
+linear_model <- lm(Petal.Length ~ Petal.Width,data = iris)
+linear_model$coefficients #可知两种指标的相似度为2.229940
+colorset1 <- c("#9B90C2","#6A4C9C","#66327C")
+colorset2 <- c("#69B0AC","#268785","#A8D8B9")
+iris %>% #绘制散点图,数据点颜色指代不同的Species
+  ggplot(aes(x = Petal.Width,y = Petal.Length,color = Species))+
+  geom_point()+
+  scale_color_manual(values = colorset1)
+iris %>% #绘制箱线图,分析Sepal.Length特征
+  ggplot(aes(x = Species,y = Sepal.Length,fill = Species))+
+  geom_boxplot()+
+  scale_fill_manual(values = colorset2)
+```
+
+## Question 1 answer description
+### (1)Petal.Length和Petal.Width两种指标的相似度(Coefficient)约为2.23,散点图如上所示.
+### (2)由箱线图可知,三个品种之间的Sepal.Length特征存在明显差异,其中setosa的总体分布最低,virginica的总体分布最高.
+
+\newpage
+
+# Question 2
+```{r,echo=TRUE,prompt=TRUE,warning=FALSE}
+n <- 20
+u1 <- 36.75
+s1 <- 2.77
+u2 <- 40.35
+s2 <- 1.56
+F12 <- s1^2/s2^2 #用F-test进行方差齐性分析
+F12 #F1的值为3.152901,大于F(19,19,0.99)
+t <- (u1-u2)/((s1^2/n)+(s2^2/n))^0.5
+t
+k <- (s1^2/n)/((s1^2/n)+s2^2/n)
+df <- ((k^2/n)+((1-k)^2/n))^-1
+df #对应a=0.01的t值为2.45,大于t
+```
+
+## Question 2 answer description
+### 首先验证方差齐性,计算出F值为3.15>F0.99(19,19),因此两个品系的差异极显著
+### 在进行均值检验.由于方差不等,应该使用近似t检验,由于计算得到的t值为-5.06,而计算出的自由度对应t分布的值为2.45,t<t(1-a,df),拒绝原假设,因此可知新品系的均值大于原品系,值得推广.
+
+\newpage
+
+# Question 3
+```{r,echo=TRUE,prompt=TRUE,message=FALSE,warning=FALSE}
+library(multcomp)
+data(cholesterol) #内置数据集
+head(cholesterol) #查看前六行
+res.aov <- aov(response~trt,data = cholesterol) #ANOVA分析
+plot(res.aov,1) #方差齐性检验
+plot(res.aov,2) #正态性检验
+summary(res.aov) #是否有显著性影响
+cholesterol %>% #箱线图绘制，对比不同药物/频次治疗方法效果
+  ggplot(aes(x = trt,y = response,fill = trt))+
+  geom_boxplot()+
+  labs(x = "Drugs/Frequency")+
+  scale_fill_brewer(palette = "BrBG")
+```
+
+## Quesiton 3 answer description
+### 由方差齐性检验图可知,残差值residual与方差没有线性关系,因此样本方差齐性较好.
+### 由正态性检验图可知,样本数据的正态性较好.
+### 由summary的结果可知,不同药物处理带来的效应明显，因此通过绘制箱线图来对比不同药物治疗或不同频次治疗的效果差异.
+### 由箱线图可知,原药物20mg一天一次(1time)降低胆固醇最多.
